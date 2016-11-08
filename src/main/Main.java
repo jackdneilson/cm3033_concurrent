@@ -19,7 +19,7 @@ public class Main {
 	}
 	
 	//Return current date and time as a string.
-	public static String getDate() {
+	public static String getCurrTime() {
 		return FORMAT.format(new java.util.Date());
 	}
 }

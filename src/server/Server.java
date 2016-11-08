@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,10 +20,12 @@ public class Server implements Runnable {
 	private ServerSocket server_socket;
 	private ExecutorService executor;
 	private volatile boolean isRunning;
+	private Semaphore set_running_sem;
 	
 	public Server(int port_no) {
 		this.port_no = port_no;
 		this.isRunning = false;
+		this.set_running_sem = new Semaphore(1);
 	}
 	
 	@Override
@@ -42,8 +45,17 @@ public class Server implements Runnable {
 		}
 	}
 	
-	public synchronized void setRunning(boolean status) {
-		this.isRunning = status;
+	//Set to false when user presses stop button
+	public void setRunning(boolean status) {
+		try {
+			set_running_sem.acquire();
+			this.isRunning = status;
+			set_running_sem.release();
+		}
+		catch (InterruptedException e) {
+			System.err.println("Interrupted while trying to stop server thread");
+		}
+		
 	}
 	
 	public int getPortNumber() {
