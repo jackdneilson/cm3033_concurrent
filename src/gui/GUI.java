@@ -5,17 +5,18 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import main.Main;
 import server.Server;
 
+@SuppressWarnings("serial")
 public class GUI extends JFrame {
 	private JTextField current_time;
 	private JButton start;
@@ -25,6 +26,7 @@ public class GUI extends JFrame {
 	private GridBagLayout layout;
 	private GridBagConstraints constraints;
 	
+	private Thread server_thread;
 	private Server server;
 	
 	private void init() {
@@ -52,7 +54,7 @@ public class GUI extends JFrame {
 				history.append("Starting...\n");
 				server = new Server(Server.DEFAULT_PORT);
 				server.setRunning(true);
-				Thread server_thread = new Thread(server);
+				server_thread = new Thread(server);
 				server_thread.start();
 				stop.setEnabled(true);
 				history.append("Started server at " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
@@ -62,9 +64,15 @@ public class GUI extends JFrame {
 		stop.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				history.append("Stopping...\n");
 				stop.setEnabled(false);
+				history.append("Stopping...\n");
 				server.setRunning(false);
+				try {
+					server.getSocket().close();
+				} catch (IOException ioexception) {
+					System.err.println(ioexception.getMessage());
+				}
+				
 				start.setEnabled(true);
 				history.append("Server stopped at " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
 			}
