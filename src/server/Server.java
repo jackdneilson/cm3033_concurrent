@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.logging.FileHandler;
 
 public class Server implements Runnable {
 	public static final int DEFAULT_PORT = 9999;
@@ -19,8 +16,9 @@ public class Server implements Runnable {
 	private ServerSocket server_socket;
 	private ExecutorService executor;
 	private volatile boolean isRunning;
-	private Socket socket;
 	private Semaphore mutex;
+	//BigInteger used to represent stocks to deal with large numbers of stocks, and because
+	//you cannot have < 1 stock
 	private volatile HashMap<String, BigInteger> data;
 	
 	public Server(int port_no) {
@@ -28,6 +26,7 @@ public class Server implements Runnable {
 		this.isRunning = false;
 		this.mutex = new Semaphore(1);
 		this.data = new HashMap<String, BigInteger>();
+		initialiseData();
 	}
 	
 	@Override
@@ -38,14 +37,14 @@ public class Server implements Runnable {
 			this.server_socket = new ServerSocket(port_no);
 			this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			while (isRunning) {
-				socket = server_socket.accept();
+				Socket socket = server_socket.accept();
 				executor.execute(new ConnectionHandler(socket, mutex, data));
 			}
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
 		} finally {
 			try {
-				//Waits until there are no connections before shutting down
+				//Continues to serve current connections after server has been stopped
 				this.executor.shutdown();
 				this.server_socket.close();
 			} catch (IOException e) {
@@ -54,7 +53,6 @@ public class Server implements Runnable {
 		}
 	}
 	
-	//Set to false when user presses stop button
 	public void setRunning(boolean status) {
 		this.isRunning = status;
 	}
@@ -70,5 +68,23 @@ public class Server implements Runnable {
 	//Should only be called after acquiring mutex
 	public HashMap<String, BigInteger> getData() {
 		return this.data;
+	}
+	
+	private void initialiseData() {
+		data.put("SKY", new BigInteger("7777"));
+		data.put("VOD", new BigInteger("1234"));
+		data.put("TSCO", new BigInteger("2356"));
+		data.put("BP", new BigInteger("4015"));
+	}
+	
+	public static String getDataString(HashMap<String, BigInteger> data) {
+		StringBuilder retval = new StringBuilder();
+		for (String key: data.keySet()) {
+			retval.append(key);
+			retval.append(": ");
+			retval.append(data.get(key));
+			retval.append("\n");
+		}
+		return retval.toString();
 	}
 }
