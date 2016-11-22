@@ -9,6 +9,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
+import javax.swing.SwingUtilities;
+
+import gui.GUI;
+import main.Main;
+
 public class Server implements Runnable {
 	public static final int DEFAULT_PORT = 9999;
 	
@@ -17,14 +22,16 @@ public class Server implements Runnable {
 	private ExecutorService executor;
 	private volatile boolean isRunning;
 	private Semaphore mutex;
+	private GUI gui;
 	//BigInteger used to represent stocks to deal with large numbers of stocks, and because
 	//you cannot have < 1 stock
 	private volatile HashMap<String, BigInteger> data;
 	
-	public Server(int port_no) {
+	public Server(int port_no, GUI gui) {
 		this.port_no = port_no;
 		this.isRunning = false;
 		this.mutex = new Semaphore(1);
+		this.gui = gui;
 		this.data = new HashMap<String, BigInteger>();
 		initialiseData();
 	}
@@ -38,7 +45,13 @@ public class Server implements Runnable {
 			this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			while (isRunning) {
 				Socket socket = server_socket.accept();
-				executor.execute(new ConnectionHandler(socket, mutex, data));
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						gui.addToHistory("New connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " on " + Main.getCurrTime() + "\n");
+					}
+				});
+				executor.execute(new ConnectionHandler(socket, mutex, data, gui));
 			}
 		} catch (IOException e) {
 			System.out.println(e.getMessage());

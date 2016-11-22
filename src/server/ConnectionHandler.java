@@ -12,20 +12,27 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 
+import javax.swing.SwingUtilities;
+
+import gui.GUI;
+import main.Main;
+
 public class ConnectionHandler implements Runnable {
 	private BufferedReader input_buf;
 	private PrintWriter output_buf;
 	private Socket socket;
 	private Semaphore mutex;
 	private HashMap<String, BigInteger> data;
+	private GUI gui;
 	
-	public ConnectionHandler(Socket socket, Semaphore mutex, HashMap<String, BigInteger> data) {
+	public ConnectionHandler(Socket socket, Semaphore mutex, HashMap<String, BigInteger> data, GUI gui) {
 		try {
 			this.socket = socket;
 			this.input_buf = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.output_buf = new PrintWriter(socket.getOutputStream());
 			this.mutex = mutex;
 			this.data = data;
+			this.gui = gui;
 		}
 		catch (IOException e) {
 			System.err.println(e.getMessage());
@@ -176,6 +183,12 @@ public class ConnectionHandler implements Runnable {
 				socket.close();
 				input_buf.close();
 				output_buf.close();
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						gui.addToHistory("Connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " dropped on " + Main.getCurrTime() + "\n");
+					}
+				});
 			} catch (IOException e) {
 				e.getMessage();
 			}

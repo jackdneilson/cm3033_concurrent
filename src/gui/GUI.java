@@ -47,17 +47,18 @@ public class GUI extends JFrame {
 		history.add(new JScrollBar());
 		constraints = new GridBagConstraints();
 		
-		start.addActionListener(new ActionListener() {
+		//Passes reference to gui to enable server and connection handlers to update history field
+		start.addActionListener(new StartButtonActionListener(this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				start.setEnabled(false);
 				history.append("Starting...\n");
-				server = new Server(Server.DEFAULT_PORT);
+				server = new Server(Server.DEFAULT_PORT, getGUI());
 				server.setRunning(true);
 				server_thread = new Thread(server);
 				server_thread.start();
 				stop.setEnabled(true);
-				history.append("Started server at " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
+				history.append("Started server on " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
 			}
 		});
 		
@@ -74,7 +75,7 @@ public class GUI extends JFrame {
 				}
 				
 				start.setEnabled(true);
-				history.append("Server stopped at " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
+				history.append("Server stopped on " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
 			}
 		});
 		
@@ -99,11 +100,32 @@ public class GUI extends JFrame {
 		c.add(current_time, constraints);
 	}
 	
+	public void addToHistory(String toAdd) {
+		history.append(toAdd);
+	}
+	
 	//Should be called as a runnable with SwingUtilities.invokeLater()
 	public static void createAndShow() {
 		GUI frame = new GUI();
 		frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		frame.init();
 		frame.setVisible(true);
+	}
+	
+	public class StartButtonActionListener implements ActionListener {
+		private GUI gui;
+		
+		public StartButtonActionListener(GUI gui) {
+			this.gui = gui;
+		}
+		
+		public GUI getGUI() {
+			return this.gui;
+		}
+		
+		//This should always be overridden
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		}
 	}
 }
