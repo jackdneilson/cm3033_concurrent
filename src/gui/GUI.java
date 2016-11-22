@@ -6,25 +6,29 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 
 import main.Main;
 import server.Server;
 
 @SuppressWarnings("serial")
 public class GUI extends JFrame {
-	private JTextField current_time;
+	private JTextField currentTime;
 	private JButton start;
 	private JButton stop;
 	private JTextArea shares;
 	private JTextArea history;
+	private JScrollPane scroll;
 	private GridBagLayout layout;
-	private GridBagConstraints constraints;
+	private Timer updateTime;
+	private Timer update_data;
 	
 	private Thread server_thread;
 	private Server server;
@@ -32,20 +36,44 @@ public class GUI extends JFrame {
 	private void init() {
 		Container c = getContentPane();
 		setTitle("Telnet Server");
-		setSize(600, 400);
+		setSize(600, 500);
 		
 		layout = new GridBagLayout();
 		c.setLayout(layout);
 		
-		current_time = new JTextField(Main.getCurrTime());
+		currentTime = new JTextField(Main.getCurrTime());
 		start = new JButton("Start");
 		stop = new JButton("Stop");
 		stop.setEnabled(false);
 		shares = new JTextArea();
-		shares.add(new JScrollBar());
+		shares.setEditable(false);
+		shares.setPreferredSize(getMinimumSize());
 		history = new JTextArea();
-		history.add(new JScrollBar());
-		constraints = new GridBagConstraints();
+		history.setEditable(false);
+		history.setPreferredSize(getMinimumSize());
+		scroll = new JScrollPane(history, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		updateTime = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				currentTime.setText(Main.getCurrTime());
+			}
+		});
+		updateTime.start();
+		
+		update_data = new Timer(100, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Semaphore mutex = server.getSemaphore();
+				try {
+					mutex.acquire();
+					shares.setText(Server.getDataString(server.getData()));
+					mutex.release();
+				} catch (InterruptedException exception) {
+					System.err.println(exception.getMessage());
+				}
+			}
+		});
 		
 		//Passes reference to gui to enable server and connection handlers to update history field
 		start.addActionListener(new StartButtonActionListener(this) {
@@ -57,6 +85,7 @@ public class GUI extends JFrame {
 				server.setRunning(true);
 				server_thread = new Thread(server);
 				server_thread.start();
+				update_data.start();
 				stop.setEnabled(true);
 				history.append("Started server on " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
 			}
@@ -68,6 +97,8 @@ public class GUI extends JFrame {
 				stop.setEnabled(false);
 				history.append("Stopping...\n");
 				server.setRunning(false);
+				update_data.stop();
+				shares.setText("");
 				try {
 					server.getSocket().close();
 				} catch (IOException ioexception) {
@@ -79,25 +110,56 @@ public class GUI extends JFrame {
 			}
 		});
 		
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		constraints.gridwidth = 3;
-		constraints.gridheight = 2;
-		c.add(shares, constraints);
+		GridBagConstraints sharesConstraints = new GridBagConstraints();
+		GridBagConstraints scrollConstraints = new GridBagConstraints();
+		GridBagConstraints startConstraints = new GridBagConstraints();
+		GridBagConstraints stopConstraints = new GridBagConstraints();
+		GridBagConstraints currentTimeConstraints = new GridBagConstraints();
 		
-		constraints.gridy = 2;
-		c.add(history, constraints);
+		sharesConstraints.gridx = 0;
+		sharesConstraints.gridy = 0;
+		sharesConstraints.gridwidth = 3;
+		sharesConstraints.gridheight = 2;
+		sharesConstraints.fill = GridBagConstraints.BOTH;
+		sharesConstraints.weightx = 1.0;
+		sharesConstraints.weighty = 1.0;
+		c.add(shares, sharesConstraints);
 		
-		constraints.gridy = 4;
-		constraints.gridwidth = 1;
-		constraints.gridheight = 1;
-		c.add(start, constraints);
+		startConstraints.gridx = 0;
+		startConstraints.gridy = 2;
+		startConstraints.gridwidth = 1;
+		startConstraints.gridheight = 1;
+		startConstraints.fill = GridBagConstraints.HORIZONTAL;
+		startConstraints.weightx = 1.0;
+		startConstraints.weighty = 0;
+		c.add(start, startConstraints);
 		
-		constraints.gridx = 1;
-		c.add(stop, constraints);
+		stopConstraints.gridx = 1;
+		stopConstraints.gridy = 2;
+		stopConstraints.gridwidth = 1;
+		stopConstraints.gridheight = 1;
+		stopConstraints.fill = GridBagConstraints.HORIZONTAL;
+		stopConstraints.weightx = 1.0;
+		stopConstraints.weighty = 0;
+		c.add(stop, stopConstraints);
 		
-		constraints.gridx = 2;
-		c.add(current_time, constraints);
+		currentTimeConstraints.gridx = 2;
+		currentTimeConstraints.gridy = 2;
+		currentTimeConstraints.gridwidth = 1;
+		currentTimeConstraints.gridheight = 1;
+		currentTimeConstraints.fill = GridBagConstraints.HORIZONTAL;
+		currentTimeConstraints.weightx = 1.0;
+		currentTimeConstraints.weighty = 0;
+		c.add(currentTime, currentTimeConstraints);
+		
+		scrollConstraints.gridx = 0;
+		scrollConstraints.gridy = 3;
+		scrollConstraints.gridwidth = 3;
+		scrollConstraints.gridheight = 2;
+		scrollConstraints.fill = GridBagConstraints.BOTH;
+		scrollConstraints.weightx = 1.0;
+		scrollConstraints.weighty = 1.0;
+		c.add(scroll, scrollConstraints);
 	}
 	
 	public void addToHistory(String toAdd) {

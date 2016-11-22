@@ -45,16 +45,16 @@ public class ConnectionHandler implements Runnable {
 	public void run() {
 		try {
 			Scanner s;
-			output_buf.write("Connected to share price quotation server at " + Inet4Address.getLocalHost() + ":" + socket.getLocalPort() + "\n");
+			output_buf.write("Connected to share price quotation server at " + Inet4Address.getLocalHost() + ":" + socket.getLocalPort() + "\n\r");
 			try {
 				mutex.acquire();
-				output_buf.write(Server.getDataString(data));
+				output_buf.write(Server.getDataString(data) + "\r");
 				mutex.release();
 			} catch (InterruptedException e) {
 				System.err.println(e.getMessage());
 			}
 			while (true) {
-				output_buf.write("Enter an order in the format [BUY/SELL] <stock name> <stock amount> or QUIT to exit\n");
+				output_buf.write("Enter an order in the format [BUY/SELL] <stock name> <stock amount> or QUIT to exit\n\r");
 				output_buf.flush();
 				String input = input_buf.readLine();
 				if (input.equals("QUIT")) {
@@ -91,14 +91,14 @@ public class ConnectionHandler implements Runnable {
 												BigInteger currentNumber = data.get(key);
 												data.put(key, currentNumber.subtract(numberToBuy));
 												mutex.release();
-												output_buf.write("Order Confirmed\n\n");
+												output_buf.write("Order Confirmed\n\n\r");
 												output_buf.write(Server.getDataString(data));
 												output_buf.flush();
 												SwingUtilities.invokeLater(new Runnable() {
 													@Override
 													public void run() {
 														gui.addToHistory(numberToBuy + " stocks of " + key + " bought on " + Main.getCurrTime() + " by " +
-															socket.getInetAddress() + ", port" + socket.getPort() + "\n");
+															socket.getInetAddress() + ", port " + socket.getPort() + "\n");
 													}
 												});
 												break;
@@ -151,7 +151,7 @@ public class ConnectionHandler implements Runnable {
 													@Override
 													public void run() {
 														gui.addToHistory(numberToSell + " stocks of " + key + " sold on " + Main.getCurrTime() + " by " +
-															socket.getInetAddress() + ", port " + socket.getPort() + "\n");
+															socket.getInetAddress() + ", port " + socket.getPort() + "\n\r");
 													}
 												});
 												mutex.release();
@@ -204,7 +204,7 @@ public class ConnectionHandler implements Runnable {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						gui.addToHistory("Connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " dropped on " + Main.getCurrTime() + "\n");
+						gui.addToHistory("Connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " dropped on " + Main.getCurrTime() + "\n\r");
 					}
 				});
 			} catch (IOException e) {

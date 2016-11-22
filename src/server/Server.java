@@ -97,8 +97,12 @@ public class Server implements Runnable {
 			retval.append(key);
 			retval.append(": ");
 			retval.append(data.get(key));
-			retval.append("\n");
+			retval.append("\n\r");
 		}
 		return retval.toString();
+	}
+	
+	public Semaphore getSemaphore() {
+		return this.mutex;
 	}
 }
