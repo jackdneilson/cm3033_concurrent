@@ -90,6 +90,7 @@ public class Server implements Runnable {
 		data.put("BP", new BigInteger("4015"));
 	}
 	
+	//Returns a string representation of the data
 	public static String getDataString(HashMap<String, BigInteger> data) {
 		StringBuilder retval = new StringBuilder();
 		for (String key: data.keySet()) {

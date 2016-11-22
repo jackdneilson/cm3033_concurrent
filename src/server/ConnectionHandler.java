@@ -77,6 +77,7 @@ public class ConnectionHandler implements Runnable {
 						if (s.hasNext()) {
 							temp = s.next();
 							try {
+								//Entering critical section as this code needs to read/modify the data
 								mutex.acquire();
 								Boolean keyFound = false;
 								for (String key: data.keySet()) {
@@ -85,13 +86,21 @@ public class ConnectionHandler implements Runnable {
 										if (s.hasNext()) {
 											temp = s.next();
 											BigInteger numberToBuy = new BigInteger(temp);
-											if (numberToBuy.compareTo(data.get(key)) == -1 && numberToBuy.compareTo(new BigInteger("0")) == 1) {
+											if (numberToBuy.compareTo(data.get(key)) <= 0 && numberToBuy.compareTo(new BigInteger("0")) == 1) {
+												//Write output of operation to output buffer, then add output to history
 												BigInteger currentNumber = data.get(key);
 												data.put(key, currentNumber.subtract(numberToBuy));
 												mutex.release();
 												output_buf.write("Order Confirmed\n\n");
 												output_buf.write(Server.getDataString(data));
 												output_buf.flush();
+												SwingUtilities.invokeLater(new Runnable() {
+													@Override
+													public void run() {
+														gui.addToHistory(numberToBuy + " stocks of " + key + " bought on " + Main.getCurrTime() + " by " +
+															socket.getInetAddress() + ", port" + socket.getPort() + "\n");
+													}
+												});
 												break;
 											} else {
 												s.close();
@@ -127,6 +136,7 @@ public class ConnectionHandler implements Runnable {
 						if (s.hasNext()) {
 							temp = s.next();
 							try {
+								//Entering critical section as this code needs to read/modify the data
 								mutex.acquire();
 								for (String key: data.keySet()) {
 									if (temp.equals(key)) {
@@ -136,6 +146,14 @@ public class ConnectionHandler implements Runnable {
 											if (numberToSell.compareTo(new BigInteger("0")) == 1) {
 												BigInteger currentNumber = data.get(key);
 												data.put(key, currentNumber.add(numberToSell));
+												//Write output of operation to output buffer, then add output to history
+												SwingUtilities.invokeLater(new Runnable() {
+													@Override
+													public void run() {
+														gui.addToHistory(numberToSell + " stocks of " + key + " sold on " + Main.getCurrTime() + " by " +
+															socket.getInetAddress() + ", port " + socket.getPort() + "\n");
+													}
+												});
 												mutex.release();
 												break;
 											} else {
