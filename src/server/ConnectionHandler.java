@@ -103,6 +103,7 @@ public class ConnectionHandler implements Runnable {
 							throw new ParseException("Couldn't parse incomplete order: expected stockcode");
 						}
 						break;
+					//TODO: Write comment
 					case "SELL":
 						temp = s.next();
 						break;
