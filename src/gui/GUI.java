@@ -33,6 +33,7 @@ public class GUI extends JFrame {
 	private Thread server_thread;
 	private Server server;
 	
+	//Initialise GUI objects, add action listeners and start timers
 	private void init() {
 		Container c = getContentPane();
 		setTitle("Telnet Server");
@@ -147,9 +148,10 @@ public class GUI extends JFrame {
 		currentTimeConstraints.gridy = 2;
 		currentTimeConstraints.gridwidth = 1;
 		currentTimeConstraints.gridheight = 1;
-		currentTimeConstraints.fill = GridBagConstraints.HORIZONTAL;
+		currentTimeConstraints.fill = GridBagConstraints.NONE;
 		currentTimeConstraints.weightx = 1.0;
 		currentTimeConstraints.weighty = 0;
+		currentTimeConstraints.anchor = GridBagConstraints.EAST;
 		c.add(currentTime, currentTimeConstraints);
 		
 		scrollConstraints.gridx = 0;
@@ -162,6 +164,7 @@ public class GUI extends JFrame {
 		c.add(scroll, scrollConstraints);
 	}
 	
+	//Should only be called after mutex lock is acquired
 	public void addToHistory(String toAdd) {
 		history.append(toAdd);
 	}
