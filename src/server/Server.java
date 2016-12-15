@@ -20,7 +20,7 @@ public class Server implements Runnable {
 	private int port_no;
 	private ServerSocket server_socket;
 	private ExecutorService executor;
-	private volatile boolean isRunning;
+	private volatile boolean is_running;
 	private Semaphore mutex;
 	private GUI gui;
 	//BigInteger used to represent stocks to deal with large numbers of stocks, and because
@@ -29,11 +29,11 @@ public class Server implements Runnable {
 	
 	public Server(int port_no, GUI gui) {
 		this.port_no = port_no;
-		this.isRunning = false;
+		this.is_running = false;
 		this.mutex = new Semaphore(1);
 		this.gui = gui;
 		this.data = new HashMap<String, BigInteger>();
-		initialiseData();
+		initialise_data();
 	}
 	
 	@Override
@@ -43,12 +43,12 @@ public class Server implements Runnable {
 		try {
 			this.server_socket = new ServerSocket(port_no);
 			this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-			while (isRunning) {
+			while (is_running) {
 				Socket socket = server_socket.accept();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						gui.addToHistory("New connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " on " + Main.getCurrTime() + "\n");
+						gui.add_to_history("New connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " on " + Main.getCurrTime() + "\n");
 					}
 				});
 				executor.execute(new ConnectionHandler(socket, mutex, data, gui));
@@ -66,24 +66,24 @@ public class Server implements Runnable {
 		}
 	}
 	
-	public void setRunning(boolean status) {
-		this.isRunning = status;
+	public void set_running(boolean status) {
+		this.is_running = status;
 	}
 	
-	public int getPortNumber() {
+	public int get_port_number() {
 		return this.port_no;
 	}
 	
-	public ServerSocket getSocket() {
+	public ServerSocket get_socket() {
 		return this.server_socket;
 	}
 	
 	//Should only be called after acquiring mutex
-	public HashMap<String, BigInteger> getData() {
+	public HashMap<String, BigInteger> get_data() {
 		return this.data;
 	}
 	
-	private void initialiseData() {
+	private void initialise_data() {
 		data.put("SKY", new BigInteger("7777"));
 		data.put("VOD", new BigInteger("1234"));
 		data.put("TSCO", new BigInteger("2356"));
@@ -91,7 +91,7 @@ public class Server implements Runnable {
 	}
 	
 	//Returns a string representation of the data
-	public static String getDataString(HashMap<String, BigInteger> data) {
+	public static String get_data_string(HashMap<String, BigInteger> data) {
 		StringBuilder retval = new StringBuilder();
 		for (String key: data.keySet()) {
 			retval.append(key);
@@ -102,7 +102,7 @@ public class Server implements Runnable {
 		return retval.toString();
 	}
 	
-	public Semaphore getSemaphore() {
+	public Semaphore get_semaphore() {
 		return this.mutex;
 	}
 }

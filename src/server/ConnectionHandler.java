@@ -48,7 +48,7 @@ public class ConnectionHandler implements Runnable {
 			output_buf.write("Connected to share price quotation server at " + Inet4Address.getLocalHost() + ":" + socket.getLocalPort() + "\n\r");
 			try {
 				mutex.acquire();
-				output_buf.write(Server.getDataString(data) + "\r");
+				output_buf.write(Server.get_data_string(data) + "\r");
 				mutex.release();
 			} catch (InterruptedException e) {
 				System.err.println(e.getMessage());
@@ -92,12 +92,12 @@ public class ConnectionHandler implements Runnable {
 												data.put(key, currentNumber.subtract(numberToBuy));
 												mutex.release();
 												output_buf.write("Order Confirmed\n\n\r");
-												output_buf.write(Server.getDataString(data));
+												output_buf.write(Server.get_data_string(data));
 												output_buf.flush();
 												SwingUtilities.invokeLater(new Runnable() {
 													@Override
 													public void run() {
-														gui.addToHistory(numberToBuy + " stocks of " + key + " bought on " + Main.getCurrTime() + " by " +
+														gui.add_to_history(numberToBuy + " stocks of " + key + " bought on " + Main.getCurrTime() + " by " +
 															socket.getInetAddress() + ", port " + socket.getPort() + "\n");
 													}
 												});
@@ -150,7 +150,7 @@ public class ConnectionHandler implements Runnable {
 												SwingUtilities.invokeLater(new Runnable() {
 													@Override
 													public void run() {
-														gui.addToHistory(numberToSell + " stocks of " + key + " sold on " + Main.getCurrTime() + " by " +
+														gui.add_to_history(numberToSell + " stocks of " + key + " sold on " + Main.getCurrTime() + " by " +
 															socket.getInetAddress() + ", port " + socket.getPort() + "\n\r");
 													}
 												});
@@ -204,7 +204,7 @@ public class ConnectionHandler implements Runnable {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						gui.addToHistory("Connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " dropped on " + Main.getCurrTime() + "\n\r");
+						gui.add_to_history("Connection from " + socket.getInetAddress() + " on port " + socket.getPort() + " dropped on " + Main.getCurrTime() + "\n\r");
 					}
 				});
 			} catch (IOException e) {

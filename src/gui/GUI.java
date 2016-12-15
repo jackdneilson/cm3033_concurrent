@@ -20,7 +20,7 @@ import server.Server;
 
 @SuppressWarnings("serial")
 public class GUI extends JFrame {
-	private JTextField currentTime;
+	private JTextField curr_time;
 	private JButton start;
 	private JButton stop;
 	private JTextArea shares;
@@ -42,7 +42,7 @@ public class GUI extends JFrame {
 		layout = new GridBagLayout();
 		c.setLayout(layout);
 		
-		currentTime = new JTextField(Main.getCurrTime());
+		curr_time = new JTextField(Main.getCurrTime());
 		start = new JButton("Start");
 		stop = new JButton("Stop");
 		stop.setEnabled(false);
@@ -57,7 +57,7 @@ public class GUI extends JFrame {
 		updateTime = new Timer(1000, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				currentTime.setText(Main.getCurrTime());
+				curr_time.setText(Main.getCurrTime());
 			}
 		});
 		updateTime.start();
@@ -65,10 +65,10 @@ public class GUI extends JFrame {
 		update_data = new Timer(100, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Semaphore mutex = server.getSemaphore();
+				Semaphore mutex = server.get_semaphore();
 				try {
 					mutex.acquire();
-					shares.setText(Server.getDataString(server.getData()));
+					shares.setText(Server.get_data_string(server.get_data()));
 					mutex.release();
 				} catch (InterruptedException exception) {
 					System.err.println(exception.getMessage());
@@ -83,12 +83,12 @@ public class GUI extends JFrame {
 				start.setEnabled(false);
 				history.append("Starting...\n");
 				server = new Server(Server.DEFAULT_PORT, getGUI());
-				server.setRunning(true);
+				server.set_running(true);
 				server_thread = new Thread(server);
 				server_thread.start();
 				update_data.start();
 				stop.setEnabled(true);
-				history.append("Started server on " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
+				history.append("Started server on " + Main.getCurrTime() + " on port " + server.get_port_number() + "\n");
 			}
 		});
 		
@@ -97,17 +97,17 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				stop.setEnabled(false);
 				history.append("Stopping...\n");
-				server.setRunning(false);
+				server.set_running(false);
 				update_data.stop();
 				shares.setText("");
 				try {
-					server.getSocket().close();
+					server.get_socket().close();
 				} catch (IOException ioexception) {
 					System.err.println(ioexception.getMessage());
 				}
 				
 				start.setEnabled(true);
-				history.append("Server stopped on " + Main.getCurrTime() + " on port " + server.getPortNumber() + "\n");
+				history.append("Server stopped on " + Main.getCurrTime() + " on port " + server.get_port_number() + "\n");
 			}
 		});
 		
@@ -152,7 +152,7 @@ public class GUI extends JFrame {
 		currentTimeConstraints.weightx = 1.0;
 		currentTimeConstraints.weighty = 0;
 		currentTimeConstraints.anchor = GridBagConstraints.EAST;
-		c.add(currentTime, currentTimeConstraints);
+		c.add(curr_time, currentTimeConstraints);
 		
 		scrollConstraints.gridx = 0;
 		scrollConstraints.gridy = 3;
@@ -165,7 +165,7 @@ public class GUI extends JFrame {
 	}
 	
 	//Should only be called after mutex lock is acquired
-	public void addToHistory(String toAdd) {
+	public void add_to_history(String toAdd) {
 		history.append(toAdd);
 	}
 	
