@@ -51,8 +51,8 @@ public class GUI extends JFrame {
 		shares.setPreferredSize(getMinimumSize());
 		history = new JTextArea();
 		history.setEditable(false);
-		history.setPreferredSize(getMinimumSize());
 		scroll = new JScrollPane(history, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scroll.setPreferredSize(getMinimumSize());
 		
 		updateTime = new Timer(1000, new ActionListener() {
 			@Override
